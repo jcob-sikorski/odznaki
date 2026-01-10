@@ -3,6 +3,10 @@
 
 {% block content %}
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
 <style>
     .hover-lift {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -29,10 +33,17 @@
         background-color: #adb5bd;
         border-radius: 20px;
     }
+    
+    /* Map Container Style */
+    #map {
+        height: 400px;
+        width: 100%;
+        z-index: 1; /* Ensure it stays below navbar */
+    }
 </style>
 
 <div class="container py-4">
-    <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
         <div class="row g-0">
             <div class="col-md-4 bg-light d-flex align-items-center justify-content-center p-4 text-center border-end">
                 <div>
@@ -69,6 +80,15 @@
                     {% endfor %}
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+            <h4 class="fw-bold mb-0"><i class="bi bi-map me-2 text-success"></i>Mapa Zdobytych Szczytów</h4>
+        </div>
+        <div class="card-body p-4">
+            <div id="map" class="rounded-3 border"></div>
         </div>
     </div>
 
@@ -133,5 +153,61 @@
         {% endfor %}
     </div>
 </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Map centered roughly on Poland, zoom level 6
+        var map = L.map('map').setView([52.0693, 19.4803], 6);
+
+        // Add OpenStreetMap Tile Layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        // Define a custom icon (Optional, green for success)
+        var greenIcon = new L.Icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        var markers = [];
+        
+        // Loop through Django data to add markers
+        {% for mountain in visited_mountains %}
+            var lat = {{ mountain.latitude|stringformat:".5f" }};
+            var lon = {{ mountain.longitude|stringformat:".5f" }};
+            var name = "{{ mountain.name }}";
+            var alt = "{{ mountain.altitude }}";
+
+            // Add Marker
+            var marker = L.marker([lat, lon], {icon: greenIcon}).addTo(map);
+            
+            // Add Popup
+            marker.bindPopup(`
+                <div class="text-center">
+                    <h6 class="fw-bold mb-1">${name}</h6>
+                    <span class="badge bg-success">${alt} m n.p.m.</span>
+                </div>
+            `);
+            
+            markers.push([lat, lon]);
+        {% endfor %}
+
+        // Adjust map view to fit all markers if any exist
+        if (markers.length > 0) {
+            var bounds = new L.LatLngBounds(markers);
+            map.fitBounds(bounds, { padding: [50, 50] });
+        }
+    });
+</script>
 
 {% endblock %}
