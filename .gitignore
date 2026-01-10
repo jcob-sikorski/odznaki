@@ -1,4 +1,6 @@
 config/__pycache__
+mountains/__pycache__
+mountains/migrations
 .venv
 media
 db.sqlite3

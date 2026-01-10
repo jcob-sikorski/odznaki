@@ -8,6 +8,7 @@
      crossorigin=""/>
 
 <style>
+    /* UTILITIES */
     .hover-lift {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
@@ -15,17 +16,12 @@
         transform: translateY(-5px);
         box-shadow: 0 10px 20px rgba(0,0,0,0.12) !important;
     }
+    
+    /* SCROLLABLE LISTS */
     .mountain-scroll-container {
         max-height: 120px;
         overflow-y: auto;
     }
-    .img-overlay-badge {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        z-index: 10;
-    }
-    /* Custom scrollbar for mountain list */
     .mountain-scroll-container::-webkit-scrollbar {
         width: 6px;
     }
@@ -33,17 +29,51 @@
         background-color: #adb5bd;
         border-radius: 20px;
     }
-    
-    /* Map Container Style */
+
+    /* BADGE STYLES */
+    .badge-card {
+        transition: all 0.3s ease;
+    }
+    .badge-locked {
+        filter: grayscale(100%);
+        opacity: 0.6;
+    }
+    .badge-unlocked {
+        border: 2px solid #198754 !important; /* Green border */
+        background-color: #f0fff4;
+        transform: scale(1.02);
+        box-shadow: 0 4px 15px rgba(25, 135, 84, 0.2) !important;
+    }
+    .badge-icon-placeholder {
+        width: 80px;
+        height: 80px;
+        background-color: #e9ecef;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px auto;
+        font-size: 2rem;
+        color: #6c757d;
+    }
+
+    /* MAP & IMAGES */
+    .img-overlay-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10;
+    }
     #map {
         height: 400px;
         width: 100%;
-        z-index: 1; /* Ensure it stays below navbar */
+        z-index: 1;
     }
 </style>
 
 <div class="container py-4">
-    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+    
+    <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
         <div class="row g-0">
             <div class="col-md-4 bg-light d-flex align-items-center justify-content-center p-4 text-center border-end">
                 <div>
@@ -80,6 +110,60 @@
                     {% endfor %}
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="mb-5">
+        <h3 class="fw-bold mb-3"><i class="bi bi-award-fill text-warning me-2"></i>Twoje Odznaki</h3>
+        
+        <div class="row g-3">
+            {% for item in badges_status %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 p-3 text-center badge-card {% if item.is_unlocked %}badge-unlocked{% else %}badge-locked{% endif %}">
+                    
+                    {% if item.obj.icon %}
+                        <img src="{{ item.obj.icon.url }}" alt="{{ item.obj.name }}" class="img-fluid mb-3" style="max-height: 80px;">
+                    {% else %}
+                        <div class="badge-icon-placeholder">
+                            {% if item.is_unlocked %}
+                                <i class="bi bi-trophy-fill text-warning"></i>
+                            {% else %}
+                                <i class="bi bi-lock-fill"></i>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <h6 class="fw-bold mb-1">{{ item.obj.name }}</h6>
+                    <p class="small text-muted mb-2 lh-sm" style="font-size: 0.8rem;">
+                        {{ item.obj.description|truncatechars:60 }}
+                    </p>
+
+                    <div class="mt-auto pt-2">
+                        {% if item.is_unlocked %}
+                            <span class="badge bg-success rounded-pill w-100 py-2">
+                                <i class="bi bi-check-lg me-1"></i> Zdobyta!
+                            </span>
+                        {% else %}
+                            <div class="d-flex justify-content-between small text-muted mb-1" style="font-size: 0.75rem;">
+                                <span>Postęp</span>
+                                <span>{{ item.current }} / {{ item.total }}</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ item.percent }}%"></div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-light text-center border dashed-border py-4">
+                    <i class="bi bi-info-circle text-muted fs-4 mb-2 d-block"></i>
+                    Brak odznak w systemie.
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
 
@@ -147,7 +231,7 @@
             <div class="text-muted">
                 <i class="bi bi-images display-1 opacity-25"></i>
                 <p class="mt-3">Nie dodałeś jeszcze żadnych zdjęć.</p>
-                <button class="btn btn-outline-primary btn-sm mt-2">Dodaj pierwsze zdjęcie</button>
+                <a href="{% url 'upload' %}" class="btn btn-outline-primary btn-sm mt-2">Dodaj pierwsze zdjęcie</a>
             </div>
         </div>
         {% endfor %}
@@ -160,16 +244,14 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize Map centered roughly on Poland, zoom level 6
+        // Initialize Map
         var map = L.map('map').setView([52.0693, 19.4803], 6);
 
-        // Add OpenStreetMap Tile Layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
-            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            attribution: '&copy; OpenStreetMap'
         }).addTo(map);
 
-        // Define a custom icon (Optional, green for success)
         var greenIcon = new L.Icon({
             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -181,17 +263,15 @@
 
         var markers = [];
         
-        // Loop through Django data to add markers
+        // Loop through Django data
         {% for mountain in visited_mountains %}
             var lat = {{ mountain.latitude|stringformat:".5f" }};
             var lon = {{ mountain.longitude|stringformat:".5f" }};
             var name = "{{ mountain.name }}";
             var alt = "{{ mountain.altitude }}";
 
-            // Add Marker
             var marker = L.marker([lat, lon], {icon: greenIcon}).addTo(map);
             
-            // Add Popup
             marker.bindPopup(`
                 <div class="text-center">
                     <h6 class="fw-bold mb-1">${name}</h6>
@@ -202,7 +282,6 @@
             markers.push([lat, lon]);
         {% endfor %}
 
-        // Adjust map view to fit all markers if any exist
         if (markers.length > 0) {
             var bounds = new L.LatLngBounds(markers);
             map.fitBounds(bounds, { padding: [50, 50] });
