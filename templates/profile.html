@@ -1,50 +1,137 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card shadow-sm">
-            <div class="card-body text-center">
-                <h3>Twój Postęp</h3>
-                <h1 class="display-4 text-success">{{ progress }}</h1>
-                <p class="text-muted">Zdobytych szczytów</p>
-                
+
+<style>
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.12) !important;
+    }
+    .mountain-scroll-container {
+        max-height: 120px;
+        overflow-y: auto;
+    }
+    .img-overlay-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10;
+    }
+    /* Custom scrollbar for mountain list */
+    .mountain-scroll-container::-webkit-scrollbar {
+        width: 6px;
+    }
+    .mountain-scroll-container::-webkit-scrollbar-thumb {
+        background-color: #adb5bd;
+        border-radius: 20px;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
+        <div class="row g-0">
+            <div class="col-md-4 bg-light d-flex align-items-center justify-content-center p-4 text-center border-end">
                 <div>
+                    <div class="mb-2">
+                        <i class="bi bi-trophy-fill text-warning display-4"></i>
+                    </div>
+                    <h5 class="text-muted text-uppercase fw-bold small ls-1">Zdobytych Szczytów</h5>
+                    <h1 class="display-3 fw-bold text-success mb-0">{{ progress }}</h1>
+                </div>
+            </div>
+
+            <div class="col-md-8 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0 fw-bold">Twój Szlak</h4>
+                    <div class="d-flex align-items-center">
+                        <span class="small text-muted me-2">Postęp</span>
+                        <div class="progress" style="width: 100px; height: 10px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 33%" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="28"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-muted small mb-2">Ostatnio zdobyte:</p>
+                <div class="mountain-scroll-container">
                     {% for m in visited_mountains %}
-                        <span class="badge bg-success p-2 m-1">✅ {{ m.name }}</span>
+                        <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 m-1">
+                            <i class="bi bi-check-circle-fill me-1"></i> {{ m.name }}
+                        </span>
                     {% empty %}
-                        <span class="text-muted">Brak zdobytych szczytów. Ruszaj na szlak!</span>
+                        <div class="alert alert-secondary d-flex align-items-center p-2" role="alert">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <div>Brak zdobytych szczytów. Ruszaj na szlak!</div>
+                        </div>
                     {% endfor %}
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<h3>Twoje Zdjęcia</h3>
-<div class="row">
-    {% for photo in photos %}
-    <div class="col-md-4 mb-3">
-        <div class="card h-100">
-            <img src="{{ photo.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;">
-            <div class="card-body">
-                {% if photo.matched_mountain %}
-                    <h5 class="card-title text-success">📍 {{ photo.matched_mountain.name }}</h5>
-                    <p class="card-text small">Gratulacje! Zaliczono szczyt.</p>
-                {% else %}
-                    <h5 class="card-title text-muted">Brak dopasowania</h5>
-                    <p class="card-text small">
-                        {% if photo.latitude %}
-                            GPS: {{ photo.latitude|stringformat:".4f" }}, {{ photo.longitude|stringformat:".4f" }}
-                        {% else %}
-                            Brak danych EXIF w zdjęciu.
-                        {% endif %}
-                    </p>
-                {% endif %}
-                <small class="text-muted">{{ photo.uploaded_at|date:"Y-m-d H:i" }}</small>
+    <div class="d-flex align-items-center mb-4">
+        <h3 class="fw-bold mb-0 me-3">Twoje Zdjęcia</h3>
+        <span class="badge bg-secondary rounded-pill">{{ photos.count }}</span>
+    </div>
+
+    <div class="row g-4">
+        {% for photo in photos %}
+        <div class="col-md-4 col-sm-6">
+            <div class="card h-100 border-0 shadow-sm hover-lift rounded-3 overflow-hidden">
+                
+                <div class="position-relative">
+                    <img src="{{ photo.image.url }}" class="card-img-top" style="height: 220px; object-fit: cover;" alt="Mountain Photo">
+                    
+                    {% if photo.matched_mountain %}
+                        <span class="badge bg-success img-overlay-badge shadow">
+                            <i class="bi bi-geo-alt-fill"></i> Zweryfikowano
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark img-overlay-badge shadow">
+                            <i class="bi bi-question-circle-fill"></i> Do sprawdzenia
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="card-body">
+                    {% if photo.matched_mountain %}
+                        <h5 class="card-title fw-bold text-dark mb-1">{{ photo.matched_mountain.name }}</h5>
+                        <p class="card-text text-muted small mb-3">Szczyt zaliczony pomyślnie.</p>
+                    {% else %}
+                        <h5 class="card-title text-muted fst-italic mb-1">Brak dopasowania</h5>
+                        <div class="card-text small text-muted mb-3">
+                            {% if photo.latitude %}
+                                <div class="d-flex align-items-center mt-2">
+                                    <i class="bi bi-pin-map me-2"></i>
+                                    <code>{{ photo.latitude|stringformat:".4f" }}, {{ photo.longitude|stringformat:".4f" }}</code>
+                                </div>
+                            {% else %}
+                                <span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Brak danych EXIF</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-footer bg-white border-0 pt-0 pb-3">
+                    <small class="text-muted d-flex align-items-center">
+                        <i class="bi bi-calendar3 me-2"></i> {{ photo.uploaded_at|date:"d M Y, H:i" }}
+                    </small>
+                </div>
             </div>
         </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="text-muted">
+                <i class="bi bi-images display-1 opacity-25"></i>
+                <p class="mt-3">Nie dodałeś jeszcze żadnych zdjęć.</p>
+                <button class="btn btn-outline-primary btn-sm mt-2">Dodaj pierwsze zdjęcie</button>
+            </div>
+        </div>
+        {% endfor %}
     </div>
-    {% endfor %}
 </div>
+
 {% endblock %}
