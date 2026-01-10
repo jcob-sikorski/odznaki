@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Dodaj zdjęcie ze szlaku</div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Wybierz plik (JPG z EXIF)</label>
+                        {{ form.as_p }}
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Weryfikuj</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <h3>Twój Postęp</h3>
+                <h1 class="display-4 text-success">{{ progress }}</h1>
+                <p class="text-muted">Zdobytych szczytów</p>
+                
+                <div>
+                    {% for m in visited_mountains %}
+                        <span class="badge bg-success p-2 m-1">✅ {{ m.name }}</span>
+                    {% empty %}
+                        <span class="text-muted">Brak zdobytych szczytów. Ruszaj na szlak!</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3>Twoje Zdjęcia</h3>
+<div class="row">
+    {% for photo in photos %}
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <img src="{{ photo.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+            <div class="card-body">
+                {% if photo.matched_mountain %}
+                    <h5 class="card-title text-success">📍 {{ photo.matched_mountain.name }}</h5>
+                    <p class="card-text small">Gratulacje! Zaliczono szczyt.</p>
+                {% else %}
+                    <h5 class="card-title text-muted">Brak dopasowania</h5>
+                    <p class="card-text small">
+                        {% if photo.latitude %}
+                            GPS: {{ photo.latitude|stringformat:".4f" }}, {{ photo.longitude|stringformat:".4f" }}
+                        {% else %}
+                            Brak danych EXIF w zdjęciu.
+                        {% endif %}
+                    </p>
+                {% endif %}
+                <small class="text-muted">{{ photo.uploaded_at|date:"Y-m-d H:i" }}</small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
