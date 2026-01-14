@@ -39,7 +39,8 @@
         opacity: 0.6;
     }
     .badge-unlocked {
-        border: 2px solid #198754 !important; /* Green border */
+        /* Visual emphasis for unlocked badges */
+        border: 2px solid #198754 !important; 
         background-color: #f0fff4;
         transform: scale(1.02);
         box-shadow: 0 4px 15px rgba(25, 135, 84, 0.2) !important;
@@ -67,7 +68,7 @@
     #map {
         height: 400px;
         width: 100%;
-        z-index: 1;
+        z-index: 1; /* Ensure map stays below navbar dropdowns */
     }
 </style>
 
@@ -244,7 +245,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize Map
+        // Initialize Map centered roughly on Poland
         var map = L.map('map').setView([52.0693, 19.4803], 6);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -252,6 +253,7 @@
             attribution: '&copy; OpenStreetMap'
         }).addTo(map);
 
+        // Custom Green Marker Icon definition
         var greenIcon = new L.Icon({
             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -263,7 +265,8 @@
 
         var markers = [];
         
-        // Loop through Django data
+        // SERVER-SIDE RENDERING INSIDE JAVASCRIPT
+        // Django loops through 'visited_mountains' and generates pure JS code for each marker.
         {% for mountain in visited_mountains %}
             var lat = {{ mountain.latitude|stringformat:".5f" }};
             var lon = {{ mountain.longitude|stringformat:".5f" }};
@@ -272,6 +275,7 @@
 
             var marker = L.marker([lat, lon], {icon: greenIcon}).addTo(map);
             
+            // Add popup with info
             marker.bindPopup(`
                 <div class="text-center">
                     <h6 class="fw-bold mb-1">${name}</h6>
@@ -282,6 +286,7 @@
             markers.push([lat, lon]);
         {% endfor %}
 
+        // Automatically zoom/pan the map to fit all markers
         if (markers.length > 0) {
             var bounds = new L.LatLngBounds(markers);
             map.fitBounds(bounds, { padding: [50, 50] });

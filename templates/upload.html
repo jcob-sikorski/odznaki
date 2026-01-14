@@ -4,21 +4,25 @@
 {% block content %}
 
 <style>
+    /* Styling for the Drag & Drop Zone */
     .upload-zone {
         border: 2px dashed #dee2e6;
         border-radius: 1rem;
         background-color: #f8f9fa;
         transition: all 0.3s ease;
         position: relative;
-        cursor: pointer;
+        cursor: pointer; /* Indicates it's clickable */
     }
     
     .upload-zone:hover, .upload-zone.dragover {
-        border-color: #198754; /* Bootstrap Success Color */
+        border-color: #198754; 
         background-color: #f1fcf5;
     }
 
-    /* Hide the actual ugly file input but keep it clickable covering the area */
+    /* TRICK: The actual <input type="file"> is placed absolutely 
+       over the entire div with opacity: 0. 
+       This makes the entire area clickable while keeping the ugly default input hidden.
+    */
     .file-input-hidden {
         position: absolute;
         top: 0;
@@ -116,11 +120,12 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // 1. Handle File Selection Visuals
+        // Because the input is invisible, we must manually update the text when a file is picked
         const fileInput = document.querySelector('input[type="file"]');
         const dropZone = document.getElementById('dropZone');
         const namePlaceholder = document.getElementById('fileNamePlaceholder');
 
-        // Apply class to the django input to make it cover the zone
+        // Apply class to the django-rendered input to make it cover the zone
         if(fileInput) {
             fileInput.classList.add('file-input-hidden');
             
@@ -135,6 +140,7 @@
         }
 
         // 2. Drag and Drop Hover Effects
+        // We add/remove classes to visually indicate when a user is dragging a file over the box
         ['dragenter', 'dragover'].forEach(eventName => {
             dropZone.addEventListener(eventName, highlight, false);
         });
@@ -150,6 +156,7 @@
         }
 
         // 3. Loading State on Submit
+        // Prevents double submission and gives user feedback during EXIF processing
         const form = document.getElementById('uploadForm');
         const btn = document.getElementById('submitBtn');
         const normalState = btn.querySelector('.normal-state');
