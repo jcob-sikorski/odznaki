@@ -2,7 +2,7 @@
 
 A Django web application that tracks and verifies mountain peaks visited by users. The system automatically analyzes GPS data (EXIF) from uploaded photos to verify if a user has reached a specific summit, unlocking badges and updating their dashboard.
 
-![Dashboard Preview](https://ucarecdn.com/6093c3c9-4ce7-4718-8926-90d5301220bb/Screenshot20260110at100047PM.png)
+![Dashboard Preview](https://ucarecdn.com/54dcca6f-e85f-434f-bcf4-4eb88da372c9/-/preview/807x1000/)
 
 ## Features
 
