@@ -1,6 +1,13 @@
-config/__pycache__
-mountains/__pycache__
-mountains/migrations
-.venv
-media
+# Python cache
+**/__pycache__/
+*.py[cod]
+
+# Environment
+.venv/
+
+# Django specific
 db.sqlite3
+media/
+
+# Ignore migrations cache but KEEP migration files
+mountains/migrations/__pycache__/
